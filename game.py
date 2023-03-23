@@ -1,58 +1,92 @@
-import pygame
+from enum import Enum
+
 import numpy as np
+import pygame
+
+NCOLS=60
+NROWS=60
+CELLSIZE=16
+
+UPDATE_RATE_MS = 100
+
+class Color(Enum):
+    ALIVE = (255, 255, 215)
+    DYING = (200, 200, 225)
+    BG = (10, 10, 40)
+    GRID = (30, 30, 60)
 
 
-col_about_to_die = (200, 200, 225)
-col_alive = (255, 255, 215)
-col_background = (10, 10, 40)
-col_grid = (30, 30, 60)
-
-
-def update(surface, cur, sz):
+def update(surface, cur):
     nxt = np.zeros((cur.shape[0], cur.shape[1]))
 
     for r, c in np.ndindex(cur.shape):
-        num_alive = np.sum(cur[r-1:r+2, c-1:c+2]) - cur[r, c]
+        alive_neighbors = np.sum(cur[r - 1 : r + 2, c - 1 : c + 2]) - cur[r, c]
 
-        if cur[r, c] == 1 and num_alive < 2 or num_alive > 3:
-            col = col_about_to_die
-        elif (cur[r, c] == 1 and 2 <= num_alive <= 3) or (cur[r, c] == 0 and num_alive == 3):
+        color = Color.BG.value
+        if cur[r, c] == 1 and alive_neighbors < 2 or alive_neighbors > 3:
+            color = Color.DYING.value
+        elif (cur[r, c] == 1 and 2 <= alive_neighbors <= 3) or (
+            cur[r, c] == 0 and alive_neighbors == 3
+        ):
             nxt[r, c] = 1
-            col = col_alive
+            color = Color.ALIVE.value
 
-        col = col if cur[r, c] == 1 else col_background
-        pygame.draw.rect(surface, col, (c*sz, r*sz, sz-1, sz-1))
+        color = color if cur[r, c] == 1 else Color.BG.value
+        pygame.draw.rect(surface, color, (c * CELLSIZE, r * CELLSIZE, CELLSIZE - 1, CELLSIZE - 1))
 
     return nxt
 
 
-def init(dimx, dimy):
-    cells = np.zeros(dimy*dimx)
+def test_init():
+    # try a manual pattern
+    pattern = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0],
+                        [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0],
+                        [1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]);
+
+    cells = np.zeros((NROWS, NCOLS))
+
+    pos = (3,3)
+    cells[pos[0]:pos[0]+pattern.shape[0], pos[1]:pos[1]+pattern.shape[1]] = pattern
+    return cells
+
+
+def init():
+    cells = np.zeros(NROWS * NCOLS)
 
     # genetic alg sets cells
 
-    return cells.reshape((dimy, dimx))
+    cells = test_init()
+
+    return cells.reshape((NROWS, NCOLS))
 
 
 
-def main(dimx, dimy, cellsize):
+def main():
     pygame.init()
-    surface = pygame.display.set_mode((dimx * cellsize, dimy * cellsize))
-    pygame.display.set_caption("John Conway's Game of Life")
+    GAME_TICK = pygame.USEREVENT + 1
+    pygame.time.set_timer(GAME_TICK, millis=UPDATE_RATE_MS)
+    surface = pygame.display.set_mode((NCOLS * CELLSIZE, NROWS * CELLSIZE))
 
-    cells = init(dimx, dimy)
+    cells = init()
 
-    while True: # only run 400 steps
+    while True:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.unicode == "q":
+                    pygame.quit()
+                    return
 
-        surface.fill(col_grid)
-        cells = update(surface, cells, cellsize)
-        pygame.display.update()
-        
+            if event.type == GAME_TICK:
+                surface.fill(Color.GRID.value)
+                cells = update(surface, cells) 
+                pygame.display.update()
 
 
 if __name__ == "__main__":
-    main(100, 70, 8)
+    main()
