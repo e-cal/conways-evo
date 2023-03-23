@@ -3,11 +3,12 @@ from enum import Enum
 import numpy as np
 import pygame
 
-NCOLS=60
-NROWS=60
-CELLSIZE=16
+NCOLS = 60
+NROWS = 60
+CELLSIZE = 16
 
 UPDATE_RATE_MS = 100
+
 
 class Color(Enum):
     ALIVE = (255, 255, 215)
@@ -17,28 +18,37 @@ class Color(Enum):
 
 
 def update(surface, cur):
-    nxt = np.zeros((cur.shape[0], cur.shape[1]))
+    nxt = np.zeros((cur.shape[0], cur.shape[1]))  # all cells dead by default
 
     for r, c in np.ndindex(cur.shape):
         alive_neighbors = np.sum(cur[r - 1 : r + 2, c - 1 : c + 2]) - cur[r, c]
 
         color = Color.BG.value
+
         if cur[r, c] == 1 and alive_neighbors < 2 or alive_neighbors > 3:
             color = Color.DYING.value
-        elif (cur[r, c] == 1 and 2 <= alive_neighbors <= 3) or (
-            cur[r, c] == 0 and alive_neighbors == 3
+
+        elif (
+            (cur[r, c] == 1 and 2 <= alive_neighbors <= 3) or 
+            (cur[r, c] == 0 and alive_neighbors == 3)  # fmt: skip
         ):
             nxt[r, c] = 1
             color = Color.ALIVE.value
 
         color = color if cur[r, c] == 1 else Color.BG.value
-        pygame.draw.rect(surface, color, (c * CELLSIZE, r * CELLSIZE, CELLSIZE - 1, CELLSIZE - 1))
+        pygame.draw.rect(
+            surface,
+            color,
+            (c * CELLSIZE, r * CELLSIZE, CELLSIZE - 1, CELLSIZE - 1),
+        )
 
     return nxt
 
 
 def test_init():
     # try a manual pattern
+
+    # fmt: off
     pattern = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                         [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0],
@@ -48,11 +58,14 @@ def test_init():
                         [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                         [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                         [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]);
+    # fmt: on
 
     cells = np.zeros((NROWS, NCOLS))
 
-    pos = (3,3)
-    cells[pos[0]:pos[0]+pattern.shape[0], pos[1]:pos[1]+pattern.shape[1]] = pattern
+    pos = (3, 3)
+    cells[
+        pos[0] : pos[0] + pattern.shape[0], pos[1] : pos[1] + pattern.shape[1]
+    ] = pattern
     return cells
 
 
@@ -64,7 +77,6 @@ def init():
     cells = test_init()
 
     return cells.reshape((NROWS, NCOLS))
-
 
 
 def main():
@@ -84,7 +96,7 @@ def main():
 
             if event.type == GAME_TICK:
                 surface.fill(Color.GRID.value)
-                cells = update(surface, cells) 
+                cells = update(surface, cells)
                 pygame.display.update()
 
 
