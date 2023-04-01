@@ -30,16 +30,50 @@ def evaluate(cells: np.ndarray):
 			if x == 0 or x == xSize-1: continue #Ignore edge blocks
 			
 			#Create 3x3 matrix array for current position
-			Target = np.array( [[cells[x-1,y-1],	cells[x,y-1],	cells[x+1,y-1]],
+			Target = np.array( [[cells[x-1,y+1],	cells[x,y+1],	cells[x+1,y+1]],
 								[cells[x-1,y],		cells[x,y],		cells[x+1,y]],
 								[cells[x-1,y-1],	cells[x,y-1],	cells[x+1,y-1]]])
 			
-			for Objects in CompareList:
-				match = numpy.array_equal(Target,Object)
+			for Object in CompareList:
+				match = np.array_equal(Target,Object)
 				if match:
 					fitness += 1
 					break
+	return fitness
 			
-			
-			
+def test_init():
+    # try a manual pattern
+
+    # fmt: off
+    pattern = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,1,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0],
+                        [0,0,0,0,1,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0],
+                        [1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                        [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]);
+    # fmt: on
+
+    cells = np.zeros((60, 60))
+
+    pos = (3, 3)
+    cells[
+        pos[0] : pos[0] + pattern.shape[0], pos[1] : pos[1] + pattern.shape[1]
+    ] = pattern
+    return cells
+
+
+def init():
+    cells = np.zeros(60 * 60)
+
+    # genetic alg sets cells
+
+    cells = test_init()
+
+    return cells.reshape((60, 60))			
 				
+if __name__ == "__main__":
+	eval = evaluate(init())
+	print(eval)
