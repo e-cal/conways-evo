@@ -2,11 +2,16 @@ from enum import Enum
 
 import numpy as np
 import pygame
+import evaluate
 
 NCOLS = 60
 NROWS = 60
 CELLSIZE = 16
 
+EVAL_WINDOW = (40, 54)
+
+# TODO: no pygame if no render
+RENDER = True
 UPDATE_RATE_MS = 100
 
 
@@ -86,6 +91,7 @@ def main():
     surface = pygame.display.set_mode((NCOLS * CELLSIZE, NROWS * CELLSIZE))
 
     cells = init()
+    step = 0
 
     while True:
         for event in pygame.event.get():
@@ -97,7 +103,12 @@ def main():
             if event.type == GAME_TICK:
                 surface.fill(Color.GRID.value)
                 cells = update(surface, cells)
+
+                if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
+                    fitness = evaluate(cells)
+
                 pygame.display.update()
+                step += 1
 
 
 if __name__ == "__main__":
