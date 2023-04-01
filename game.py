@@ -92,6 +92,7 @@ def main():
 
     cells = init()
     step = 0
+	fitness = 0
 
     while True:
         for event in pygame.event.get():
@@ -105,7 +106,7 @@ def main():
                 cells = update(surface, cells)
 
                 if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
-                    fitness = evaluate(cells)
+                    fitness += evaluate(cells)
 
                 pygame.display.update()
                 step += 1
