@@ -3,6 +3,9 @@ from enum import Enum
 import numpy as np
 import pygame
 
+from mutation import Mutation
+
+
 NCOLS = 60
 NROWS = 60
 CELLSIZE = 16
@@ -76,6 +79,7 @@ def init():
 
     cells = test_init()
 
+
     return cells.reshape((NROWS, NCOLS))
 
 
@@ -86,6 +90,8 @@ def main():
     surface = pygame.display.set_mode((NCOLS * CELLSIZE, NROWS * CELLSIZE))
 
     cells = init()
+    chrom = Mutation.bitflip(cells)
+    
 
     while True:
         for event in pygame.event.get():
