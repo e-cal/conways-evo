@@ -91,8 +91,9 @@ def main():
     surface = pygame.display.set_mode((NCOLS * CELLSIZE, NROWS * CELLSIZE))
 
     cells = init()
-    step = 0
     fitness = 0
+
+    step = 0
 
     while step <= 100:
         for event in pygame.event.get():
@@ -110,8 +111,9 @@ def main():
 
                 pygame.display.update()
                 step += 1
-	
+
     print(fitness)
+
 
 if __name__ == "__main__":
     main()
