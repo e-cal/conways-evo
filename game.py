@@ -2,7 +2,9 @@ from enum import Enum
 
 import numpy as np
 import pygame
+
 from evaluate import *
+from mutation import Mutation
 
 NCOLS = 60
 NROWS = 60
@@ -92,6 +94,7 @@ def main():
 
     cells = init()
     fitness = 0
+    chrom = Mutation.bitflip(cells)
 
     step = 0
 
