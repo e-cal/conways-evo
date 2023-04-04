@@ -1,7 +1,9 @@
 import numpy as np
 
-class Selection:
+# TODO
 
+
+class Selection:
     @staticmethod
     def mu_plus_lambda(current_pop, current_fitness, offspring, offspring_fitness):
         """mu+lambda selection"""
@@ -28,7 +30,6 @@ class Selection:
 
         return population, fitness
 
-
     @staticmethod
     def replacement(current_pop, current_fitness, offspring, offspring_fitness):
         """replacement selection"""
@@ -42,7 +43,7 @@ class Selection:
         # sort the fitness and replace the worst mu individuals
         idx = np.array(current_fitness).argsort()[::-1][:mu]
 
-        for i in range(mu-len(offspring)):
+        for i in range(mu - len(offspring)):
             ix = idx[i]
             population.append(np.array(current_pop)[ix].tolist())
             fitness.append(np.array(current_fitness)[ix].tolist())
