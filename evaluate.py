@@ -1,6 +1,8 @@
 from collections import defaultdict
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 from structures import *
 
 
@@ -45,7 +47,8 @@ def count_structures(search_space) -> dict[str, int]:
 
 
 def evaluate(cells):
-    print(count_structures(cells))
+    return sum(count_structures(cells).values())
+    # print(count_structures(cells))
 
 
 def init():
@@ -84,4 +87,4 @@ if __name__ == "__main__":
     plt.imshow(grid, cmap="gray")
     plt.show()
 
-    evaluate(grid)
+    print(evaluate(grid))
