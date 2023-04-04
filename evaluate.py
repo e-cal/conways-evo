@@ -2,14 +2,16 @@ from collections import defaultdict
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.signal import convolve2d
 
 from structures import *
 
 
-def find_submatrices(target, search_space) -> list[tuple[int, int]]:
-    def _hash(mat):
-        return np.sum(mat)
+def _hash(mat):
+    return np.sum(mat)
 
+
+def find_submatrices(target, search_space) -> list[tuple[int, int]]:
     target_hash = _hash(target)
     target_rows, target_cols = target.shape
     search_rows, search_cols = search_space.shape
@@ -35,10 +37,30 @@ def find_submatrices(target, search_space) -> list[tuple[int, int]]:
     return matches
 
 
+def fast_find_submatrices(target, search_space) -> list[tuple[int, int]]:
+    target_hash = _hash(target)
+    target_rows, target_cols = target.shape
+
+    # Use convolution to find the submatrices more efficiently
+    conv_mat = convolve2d(
+        search_space, np.flip(np.flip(target, axis=0), axis=1), mode="valid"
+    )
+    match_indices = np.where(conv_mat == target_hash)
+
+    matches = []
+    for i, j in zip(match_indices[0], match_indices[1]):
+        if np.array_equal(
+            search_space[i : i + target_rows, j : j + target_cols], target
+        ):
+            matches.append((i, j))
+
+    return matches
+
+
 def count_structures(search_space) -> dict[str, int]:
     found_structures = defaultdict(int)
     for name, structure in zip(STRUCTURE_NAMES, STRUCTURES):
-        positions = find_submatrices(structure, search_space)
+        positions = fast_find_submatrices(structure, search_space)
         if positions:
             n = len(positions)
             found_structures[name] += n

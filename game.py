@@ -1,19 +1,26 @@
+import time
 from enum import Enum
+from pprint import pprint
 
 import numpy as np
 import pygame
 
-from evaluate import *
+from evaluate import evaluate
 from mutation import Mutation
 
+# Game
 NCOLS = 60
 NROWS = 60
 CELLSIZE = 16
 
+# Genetic Algorithm
+POP_SIZE = 64
 EVAL_WINDOW = (40, 54)
+MAX_GENS = 400
+N_STEPS = EVAL_WINDOW[1]  # end when done evaluating
 
-# TODO: no pygame if no render
-RENDER = True
+# Rendering
+RENDER = False
 UPDATE_RATE_MS = 100
 
 
@@ -24,36 +31,40 @@ class Color(Enum):
     GRID = (30, 30, 60)
 
 
-def update(surface, cur):
+def update(cur, surface=None):
     nxt = np.zeros((cur.shape[0], cur.shape[1]))  # all cells dead by default
 
-    for r, c in np.ndindex(cur.shape):
-        alive_neighbors = np.sum(cur[r - 1 : r + 2, c - 1 : c + 2]) - cur[r, c]
+    for row, col in np.ndindex(cur.shape):
+        alive_neighbors = (
+            np.sum(cur[row - 1 : row + 2, col - 1 : col + 2]) - cur[row, col]
+        )
 
         color = Color.BG.value
 
-        if cur[r, c] == 1 and alive_neighbors < 2 or alive_neighbors > 3:
+        if cur[row, col] == 1 and alive_neighbors < 2 or alive_neighbors > 3:
             color = Color.DYING.value
 
         elif (
-            (cur[r, c] == 1 and 2 <= alive_neighbors <= 3) or 
-            (cur[r, c] == 0 and alive_neighbors == 3)  # fmt: skip
+            (cur[row, col] == 1 and 2 <= alive_neighbors <= 3) or 
+            (cur[row, col] == 0 and alive_neighbors == 3)  # fmt: skip
         ):
-            nxt[r, c] = 1
+            nxt[row, col] = 1
             color = Color.ALIVE.value
 
-        color = color if cur[r, c] == 1 else Color.BG.value
-        pygame.draw.rect(
-            surface,
-            color,
-            (c * CELLSIZE, r * CELLSIZE, CELLSIZE - 1, CELLSIZE - 1),
-        )
+        color = color if cur[row, col] == 1 else Color.BG.value
+
+        if surface is not None:
+            pygame.draw.rect(
+                surface,
+                color,
+                (col * CELLSIZE, row * CELLSIZE, CELLSIZE - 1, CELLSIZE - 1),
+            )
 
     return nxt
 
 
-def test_init():
-    # try a manual pattern
+def init_pattern():
+    """Input a manual pattern to initialize the game with."""
 
     # fmt: off
     pattern = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -77,28 +88,18 @@ def test_init():
 
 
 def init():
-    cells = np.zeros(NROWS * NCOLS)
-
-    # genetic alg sets cells
-
-    cells = test_init()
-
-    return cells.reshape((NROWS, NCOLS))
+    cells = np.random.randint(low=0, high=2, size=(POP_SIZE, NROWS, NCOLS))
+    return cells
 
 
-def main():
+def run_pygame(cells, surface):
     pygame.init()
     GAME_TICK = pygame.USEREVENT + 1
     pygame.time.set_timer(GAME_TICK, millis=UPDATE_RATE_MS)
     surface = pygame.display.set_mode((NCOLS * CELLSIZE, NROWS * CELLSIZE))
 
-    cells = init()
     fitness = 0
-    chrom = Mutation.bitflip(cells)
-
-    step = 0
-
-    while step <= 100:
+    for step in range(N_STEPS):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE or event.unicode == "q":
@@ -107,16 +108,47 @@ def main():
 
             if event.type == GAME_TICK:
                 surface.fill(Color.GRID.value)
-                cells = update(surface, cells)
+                cells = update(cells, surface)
 
                 if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
                     fitness += evaluate(cells)
 
                 pygame.display.update()
-                step += 1
 
-    print(fitness)
+    return fitness
+
+
+def run(cells):
+    fitness = 0
+    for step in range(N_STEPS):
+        cells = update(cells)
+        if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
+            fitness += evaluate(cells)
+
+    return fitness
+
+
+def main():
+    # init
+    population = init()
+    fitnesses = [0] * POP_SIZE
+
+    for gen in range(MAX_GENS):
+        for i, individual in enumerate(population):
+            start = time.time()
+            fitnesses[i] = run(individual)
+            print(f"Gen {gen} individual {i} fitness {fitnesses[i]}")
+            print(f"Took: {time.time() - start:.2f}s")
+
+        print(fitnesses)
+        exit()
+        chrom = Selection.tournament(fitnesses, POP_SIZE, chrom)
+        print(chrom)
+        print(f"Generation {gen} done")
+
+    # 1 gen
 
 
 if __name__ == "__main__":
-    main()
+    if not RENDER:
+        main()
