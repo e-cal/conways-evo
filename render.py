@@ -1,27 +1,21 @@
 import time
 from enum import Enum
-from pprint import pprint
 
 import numpy as np
 import pygame
 
 from evaluate import evaluate
+from main import update
 from mutation import Mutation
 
-# Game
 NCOLS = 60
 NROWS = 60
 CELLSIZE = 16
 
-# Genetic Algorithm
-POP_SIZE = 64
-EVAL_WINDOW = (40, 54)
-MAX_GENS = 400
-N_STEPS = EVAL_WINDOW[1]  # end when done evaluating
-
-# Rendering
-RENDER = False
 UPDATE_RATE_MS = 100
+
+EVAL_WINDOW = (40, 54)
+N_STEPS = EVAL_WINDOW[1]  # end when done evaluating
 
 
 class Color(Enum):
@@ -31,36 +25,23 @@ class Color(Enum):
     GRID = (30, 30, 60)
 
 
-def update(cur, surface=None):
-    nxt = np.zeros((cur.shape[0], cur.shape[1]))  # all cells dead by default
-
+def draw_cells(cur, surface):
+    surface.fill(Color.GRID.value)
     for row, col in np.ndindex(cur.shape):
-        alive_neighbors = (
-            np.sum(cur[row - 1 : row + 2, col - 1 : col + 2]) - cur[row, col]
-        )
-
         color = Color.BG.value
 
-        if cur[row, col] == 1 and alive_neighbors < 2 or alive_neighbors > 3:
-            color = Color.DYING.value
-
-        elif (
-            (cur[row, col] == 1 and 2 <= alive_neighbors <= 3) or 
-            (cur[row, col] == 0 and alive_neighbors == 3)  # fmt: skip
-        ):
-            nxt[row, col] = 1
+        if cur[row, col] == 1:
             color = Color.ALIVE.value
+        elif cur[row, col] == 0:
+            color = Color.BG.value
 
-        color = color if cur[row, col] == 1 else Color.BG.value
+        pygame.draw.rect(
+            surface,
+            color,
+            (col * CELLSIZE, row * CELLSIZE, CELLSIZE - 1, CELLSIZE - 1),
+        )
 
-        if surface is not None:
-            pygame.draw.rect(
-                surface,
-                color,
-                (col * CELLSIZE, row * CELLSIZE, CELLSIZE - 1, CELLSIZE - 1),
-            )
-
-    return nxt
+    pygame.display.update()
 
 
 def init_pattern():
@@ -87,19 +68,15 @@ def init_pattern():
     return cells
 
 
-def init():
-    cells = np.random.randint(low=0, high=2, size=(POP_SIZE, NROWS, NCOLS))
-    return cells
-
-
-def run_pygame(cells, surface):
+def run(cells, debug=False):
     pygame.init()
     GAME_TICK = pygame.USEREVENT + 1
     pygame.time.set_timer(GAME_TICK, millis=UPDATE_RATE_MS)
     surface = pygame.display.set_mode((NCOLS * CELLSIZE, NROWS * CELLSIZE))
 
     fitness = 0
-    for step in range(N_STEPS):
+    step = 0
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE or event.unicode == "q":
@@ -107,48 +84,30 @@ def run_pygame(cells, surface):
                     return
 
             if event.type == GAME_TICK:
-                surface.fill(Color.GRID.value)
-                cells = update(cells, surface)
+                draw_cells(cells, surface)
 
                 if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
-                    fitness += evaluate(cells)
+                    # fmt: off
+                    if debug: print(f"Evaluating step {step}")
+                    fitness += evaluate(cells, debug=debug)
+                    if debug: input()
+                    # fmt: on
 
-                pygame.display.update()
-
-    return fitness
-
-
-def run(cells):
-    fitness = 0
-    for step in range(N_STEPS):
-        cells = update(cells)
-        if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
-            fitness += evaluate(cells)
-
-    return fitness
-
-
-def main():
-    # init
-    population = init()
-    fitnesses = [0] * POP_SIZE
-
-    for gen in range(MAX_GENS):
-        for i, individual in enumerate(population):
-            start = time.time()
-            fitnesses[i] = run(individual)
-            print(f"Gen {gen} individual {i} fitness {fitnesses[i]}")
-            print(f"Took: {time.time() - start:.2f}s")
-
-        print(fitnesses)
-        exit()
-        chrom = Selection.tournament(fitnesses, POP_SIZE, chrom)
-        print(chrom)
-        print(f"Generation {gen} done")
-
-    # 1 gen
+                cells = update(cells)
+                step += 1
+                if step > N_STEPS:
+                    return fitness
 
 
 if __name__ == "__main__":
-    if not RENDER:
-        main()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", "-v", action="store_true")
+    args = vars(parser.parse_args())
+    debug = args["debug"]
+    print(debug)
+
+    cells = init_pattern()
+    fitness = run(cells, debug)
+    print(f"Fitness: {fitness}")

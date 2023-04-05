@@ -57,20 +57,23 @@ def fast_find_submatrices(target, search_space) -> list[tuple[int, int]]:
     return matches
 
 
-def count_structures(search_space) -> dict[str, int]:
+def count_structures(search_space, debug=False) -> dict[str, int]:
     found_structures = defaultdict(int)
-    for name, structure in zip(STRUCTURE_NAMES, STRUCTURES):
+    for i, (name, structure) in enumerate(zip(STRUCTURE_NAMES, STRUCTURES)):
         positions = fast_find_submatrices(structure, search_space)
         if positions:
             n = len(positions)
             found_structures[name] += n
 
+            if debug:
+                print(f"Found {n} {name}(s) [{i}] at {positions}")
+
     return dict(found_structures)
 
 
-def evaluate(cells):
-    return sum(count_structures(cells).values())
-    # print(count_structures(cells))
+def evaluate(cells, debug=False):
+    structures = count_structures(cells, debug)
+    return sum(structures.values())
 
 
 def init():
@@ -109,4 +112,4 @@ if __name__ == "__main__":
     plt.imshow(grid, cmap="gray")
     plt.show()
 
-    print(evaluate(grid))
+    print(evaluate(grid, True))
