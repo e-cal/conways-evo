@@ -4,38 +4,34 @@ from pprint import pprint
 import numpy as np
 
 
-class Mutation:
-    @staticmethod
-    def bitflip(chromo: np.ndarray, k=2) -> np.array:
-        og_shape = chromo.shape
-        chromo = chromo.flatten()
+def mutate(chrom: np.ndarray, k=2) -> np.ndarray:
+    out_shape = chrom.shape
+    chrom = chrom.flatten()
 
-        # flip k indices at random
-        selected = random.sample([x for x in range(len(chromo))], k=k)
+    # choose k indices without replacement
+    selected = random.sample([x for x in range(len(chrom))], k=k)
 
-        for i in selected:
-            if chromo[i] == 0:
-                chromo[i] = 1
-            else:
-                chromo[i] = 0
+    # flip the selected bits
+    for i in selected:
+        chrom[i] = 1 - chrom[i]
 
-        return np.reshape(chromo, og_shape)
+    return chrom.reshape(out_shape)
 
-    @staticmethod
-    def scramble(chromo: np.array) -> np.array:
-        return np.random.permutation(chromo.flatten()).reshape(chromo.shape)
+
+def scramble(chrom: np.ndarray) -> np.ndarray:
+    return np.random.permutation(chrom.flatten()).reshape(chrom.shape)
 
 
 if __name__ == "__main__":
     c = np.random.randint(low=0, high=2, size=(5, 5))
     print("old", c)
-    new = Mutation.bitflip(c, k=10)
+    new = mutate(c, k=2)
     print("new", new)
 
     print("\n-------------------------\n")
 
     print("old")
     pprint(c)
-    new = Mutation.scramble(c)
+    new = scramble(c)
     print("new")
     pprint(new)

@@ -1,18 +1,19 @@
+import os
 import time
 
 import numpy as np
 
 from evaluate import evaluate
-from mutation import Mutation
+from mutation import mutate
 
 # Game
 NCOLS = 60
 NROWS = 60
 
 # Genetic Algorithm
-POP_SIZE = 64
+POP_SIZE = 3  # 64
 EVAL_WINDOW = (40, 54)
-MAX_GENS = 400
+MAX_GENS = 1  # 400
 N_STEPS = EVAL_WINDOW[1]  # end when done evaluating
 
 
@@ -52,24 +53,40 @@ def run(cells):
 
 
 def main():
-    # init
     population = init()
     fitnesses = [0] * POP_SIZE
 
     for gen in range(MAX_GENS):
         for i, individual in enumerate(population):
-            start = time.time()
             fitnesses[i] = run(individual)
-            print(f"Gen {gen} individual {i} fitness {fitnesses[i]}")
-            print(f"Took: {time.time() - start:.2f}s")
 
-        print(fitnesses)
-        break
-    # chrom = Selection.tournament(fitnesses, POP_SIZE, chrom)
-    # print(chrom)
-    # print(f"Generation {gen} done")
+        # select parents
+        # parents =
 
-    # 1 gen
+        # generate offspring
+        # offspring =
+
+        # mutate offspring
+
+        # evaluate offspring
+        # offspring_fitnesses = [0] * len(offspring)
+        # for i, individual in enumerate(offspring):
+        #     offspring_fitnesses[i] = run(individual)
+
+        # select survivors
+
+        print(
+            f"Generation {gen}\n  Best fitness: {max(fitnesses)}\n  Avg fitness: {np.mean(fitnesses)}"
+        )
+
+    # save the best individuals to a file
+    max_fitness = max(fitnesses)
+    i = 1
+    for individual, fitness in zip(population, fitnesses):
+        if fitness == max_fitness:
+            os.makedirs("best", exist_ok=True)
+            np.save(f"best/{i}.npy", individual)
+            i += 1
 
 
 if __name__ == "__main__":

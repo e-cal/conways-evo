@@ -1,12 +1,14 @@
+import os
 import time
 from enum import Enum
 
 import numpy as np
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
 
 from evaluate import evaluate
 from main import update
-from mutation import Mutation
 
 NCOLS = 60
 NROWS = 60
@@ -42,6 +44,11 @@ def draw_cells(cur, surface):
         )
 
     pygame.display.update()
+
+
+def load(path):
+    cells = np.load(path)
+    return cells
 
 
 def init_pattern():
@@ -103,11 +110,21 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", "-v", action="store_true")
+    parser.add_argument("--file", "-f")
+    parser.add_argument("--debug", "-d", action="store_true")
     args = vars(parser.parse_args())
+    fp = args["file"]
     debug = args["debug"]
-    print(debug)
 
-    cells = init_pattern()
+    if not debug:
+        print("Debug mode off, use -d to enable.")
+
+    if fp is None:
+        print("No file specified, initializing pattern.")
+        cells = init_pattern()
+    else:
+        print(f"Loading {fp}")
+        cells = load(fp)
+
     fitness = run(cells, debug)
     print(f"Fitness: {fitness}")
