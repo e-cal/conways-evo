@@ -66,7 +66,7 @@ def count_structures(search_space, debug=False) -> dict[str, int]:
             found_structures[name] += n
 
             if debug:
-                print(f"Found {n} {name}(s) [{i}] at {positions}")
+                print(f"Found {n} {name}(s) [struct id {i}] at {positions}")
 
     return dict(found_structures)
 
