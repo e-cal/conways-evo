@@ -1,3 +1,4 @@
+import argparse
 import os
 import time
 
@@ -52,7 +53,7 @@ def run(cells):
     return fitness
 
 
-def main():
+def main(auto_save=False):
     population = init()
     fitnesses = [0] * POP_SIZE
 
@@ -76,18 +77,67 @@ def main():
         # select survivors
 
         print(
-            f"Generation {gen}\n  Best fitness: {max(fitnesses)}\n  Avg fitness: {np.mean(fitnesses)}"
+            f"Generation {gen}\n  Best fitness: {max(fitnesses)}\n  Avg fitness: {np.mean(fitnesses)}\n"
         )
 
-    # save the best individuals to a file
+    save_and_exit(population, fitnesses, auto_save)
+
+
+def save_and_exit(population, fitnesses, auto_save):
+    if not auto_save:
+        # save the best individuals to a file
+        save = input("\nSave best individuals? (y/n) ")
+        if save.lower() != "y":
+            return
+
+        fp = input("Enter save path (default=best): ")
+        if fp == "":
+            fp = "best"
+
+        # strip trailing slash if there is one
+        if fp[-1] == "/":
+            fp = fp[:-1]
+
+        if os.path.exists(fp):
+            print(f"Warning: {fp} already exists. Moving to {fp}_old")
+            os.rename(fp, f"{fp}_old")
+
+    else:
+        fp = "best"
+
+    os.makedirs(fp, exist_ok=True)
+
     max_fitness = max(fitnesses)
-    i = 1
-    for individual, fitness in zip(population, fitnesses):
+    n = 1
+    for i, (individual, fitness) in enumerate(zip(population, fitnesses)):
         if fitness == max_fitness:
-            os.makedirs("best", exist_ok=True)
-            np.save(f"best/{i}.npy", individual)
-            i += 1
+            print(f"Saving individual {i}")
+            np.save(f"{fp}/{n}.npy", individual)
+            n += 1
+
+    print(f"\nSaved {n - 1} individuals to {fp}")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-a", "--auto", action="store_true")
+    args = parser.parse_args()
+
+    auto = args.auto
+    if not auto:
+        print("-a/--auto not supplied, will prompt for save path at the end")
+        auto_save = input("Switch to auto save? (y/n) ")
+        if auto_save.lower() == "y":
+            auto = True
+        else:
+            print("Continuing with manual save path...")
+
+    if auto:
+        print("Auto save enabled")
+        print(
+            "Warning: this will overwrite any existing files in ./best. Back up the dir now if you want to keep them."
+        )
+
+    print()
+
+    main(auto)
