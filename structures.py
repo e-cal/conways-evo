@@ -40,7 +40,7 @@ R_PENTIMINOS = [
     # left
     np.array([[1, 0, 0], [1, 1, 1], [0, 1, 0]]),  # 22
     # left flipped
-    np.array([[0, 1, 0], [1, 1, 1], [0, 0, 1]]),  # 23
+    np.array([[0, 1, 0], [1, 1, 1], [1, 0, 0]]),  # 23
 ]
 
 EXPLODERS = [
