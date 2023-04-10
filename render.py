@@ -1,5 +1,4 @@
 import os
-import time
 from enum import Enum
 
 import numpy as np
@@ -75,7 +74,7 @@ def init_pattern():
     return cells
 
 
-def run(cells, debug=False):
+def run(cells, debug=False, interactive=False):
     pygame.init()
     GAME_TICK = pygame.USEREVENT + 1
     pygame.time.set_timer(GAME_TICK, millis=UPDATE_RATE_MS)
@@ -97,7 +96,7 @@ def run(cells, debug=False):
                     # fmt: off
                     if debug: print(f"Evaluating step {step}")
                     fitness += evaluate(cells, debug=debug)
-                    if debug: input()
+                    if interactive: input()
                     # fmt: on
 
                 cells = update(cells)
@@ -112,12 +111,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", "-f")
     parser.add_argument("--debug", "-d", action="store_true")
+    parser.add_argument("--interactive", "-i", action="store_true")
     args = vars(parser.parse_args())
     fp = args["file"]
     debug = args["debug"]
+    interactive = args["interactive"]
 
     if not debug:
-        print("Debug mode off, use -d to enable.")
+        print("Debug mode off, use -d to see debug output.")
+    if not interactive:
+        print("Interactive mode off, use -i to pause after each evaluation step.")
 
     if fp is None:
         print("No file specified, initializing pattern.")
@@ -126,5 +129,5 @@ if __name__ == "__main__":
         print(f"Loading {fp}")
         cells = load(fp)
 
-    fitness = run(cells, debug)
+    fitness = run(cells, debug, interactive)
     print(f"Fitness: {fitness}")
