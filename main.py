@@ -39,7 +39,7 @@ def update(cur):
             np.sum(cur[row - 1 : row + 2, col - 1 : col + 2]) - cur[row, col]
         )
 
-        # cell alive in the next generation under two conditions:
+        # a cell will be alive in the next generation if it satisfies one of two conditions:
         # survival: cell was alive and has 2 or 3 alive neighbors
         # reproduction: cell was dead and has 3 alive neighbors
         if (
@@ -71,7 +71,9 @@ def main(path):
             fitnesses[i] = run(individual)
 
         # select parents
+        print(f"Fitnesses: {fitnesses}")
         parents, parents_fitness = select_parents(population, fitnesses)
+        print(f"Parents: {parents_fitness}")
 
         # generate offspring
         # offspring =
