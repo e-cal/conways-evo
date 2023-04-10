@@ -3,8 +3,9 @@ import os
 
 import numpy as np
 
-from evaluate import total_structures
+from evaluate import num_structures
 from mutation import bitflip
+from recombination import k_point_crossover
 from selection import mu_plus_lambda, nbest
 
 # Game
@@ -12,18 +13,25 @@ NCOLS = 60
 NROWS = 60
 
 # Genetic Algorithm
-POP_SIZE = 3  # 64
+POP_SIZE = 64
 EVAL_WINDOW = (40, 54)
 MAX_GENS = 3  # 400
 N_STEPS = EVAL_WINDOW[1]  # end when done evaluating
 
+N_PARENTS = 8
+N_OFFSPRING = 8
+
 DEFUALT_PATH = "history"
 
 # Set algorithms to use
-evaluate = total_structures
-select_parents = nbest
+# fmt: off
+evaluate = num_structures
 select_survivors = mu_plus_lambda
 mutate = bitflip
+recombine = k_point_crossover
+def select_parents(population, fitnesses):
+    return nbest(population, fitnesses, N_PARENTS)
+# fmt: on
 
 
 def init():

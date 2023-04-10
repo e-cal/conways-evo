@@ -1,32 +1,32 @@
 import random
-from pprint import pprint
 
 import numpy as np
-
 
 ###############################
 # Recombination Algorithms
 ###############################
-def k_point_crossover(c1: np.ndarray, c2: np.ndarray, k=1) -> np.ndarray:
+
+
+def k_point_crossover(parent1: np.ndarray, parent2: np.ndarray, k=1) -> np.ndarray:
     # pre flight checks
-    assert c1.shape == c2.shape
+    assert parent1.shape == parent2.shape
 
     if k == 0:
-        return c1, c2
+        return parent1, parent2
 
-    og_shape = c1.shape
+    og_shape = parent1.shape
 
     # flatten the game into a bit string
-    c1 = c1.flatten()
-    c2 = c2.flatten()
+    c1 = parent1.flatten()
+    c2 = parent2.flatten()
 
     # pick k random indices and sort
     selected = random.sample([x for x in range(len(c1))], k=k)
     selected.sort()
 
     # get the first cut since we always flip it
-    o1 = np.array(c1[: selected[0]])
-    o2 = np.array(c2[: selected[0]])
+    offspring1 = np.array(c1[: selected[0]])
+    offspring2 = np.array(c2[: selected[0]])
 
     flip = True
     for i in range(len(selected)):
@@ -40,16 +40,16 @@ def k_point_crossover(c1: np.ndarray, c2: np.ndarray, k=1) -> np.ndarray:
 
         # apply the flip every other cut
         if flip:
-            o1 = np.array(np.concatenate((o1, cut2)))
-            o2 = np.array(np.concatenate((o2, cut1)))
+            offspring1 = np.array(np.concatenate((offspring1, cut2)))
+            offspring2 = np.array(np.concatenate((offspring2, cut1)))
         else:
-            o1 = np.array(np.concatenate((o1, cut1)))
-            o2 = np.array(np.concatenate((o2, cut2)))
+            offspring1 = np.array(np.concatenate((offspring1, cut1)))
+            offspring2 = np.array(np.concatenate((offspring2, cut2)))
 
         # set the flag to skip/flip the next section
         flip = not flip
 
-    o1 = np.reshape(o1, og_shape)
-    o2 = np.reshape(o2, og_shape)
+    offspring1 = np.reshape(offspring1, og_shape)
+    offspring2 = np.reshape(offspring2, og_shape)
 
-    return o1, o2
+    return offspring1, offspring2
