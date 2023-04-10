@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import convolve2d
 
@@ -71,45 +70,6 @@ def count_structures(search_space, debug=False) -> dict[str, int]:
     return dict(found_structures)
 
 
-def evaluate(cells, debug=False):
+def total_structures(cells, debug=False):
     structures = count_structures(cells, debug)
     return sum(structures.values())
-
-
-def init():
-    NROWS = 60
-    NCOLS = 60
-    cells = np.zeros((NROWS, NCOLS))
-
-    glider = GLIDERS[0]
-    pos = (NROWS // 2, NCOLS // 2)
-    cells[pos[0] : pos[0] + glider.shape[0], pos[1] : pos[1] + glider.shape[1]] = glider
-
-    glider = GLIDERS[2]
-    pos = ((NROWS // 2) + 10, (NCOLS // 2) + 10)
-    cells[pos[0] : pos[0] + glider.shape[0], pos[1] : pos[1] + glider.shape[1]] = glider
-
-    rpent = R_PENTIMINOS[2]
-    pos = ((NROWS // 2), (NCOLS // 2) + 10)
-    cells[pos[0] : pos[0] + rpent.shape[0], pos[1] : pos[1] + rpent.shape[1]] = rpent
-
-    rpent = R_PENTIMINOS[2]
-    pos = ((NROWS // 2) - 10, (NCOLS // 2) - 10)
-    cells[pos[0] : pos[0] + rpent.shape[0], pos[1] : pos[1] + rpent.shape[1]] = rpent
-
-    exploder = EXPLODERS[0]
-    pos = ((NROWS // 2) + 10, (NCOLS // 2) - 10)
-    cells[
-        pos[0] : pos[0] + exploder.shape[0], pos[1] : pos[1] + exploder.shape[1]
-    ] = exploder
-
-    return cells
-
-
-if __name__ == "__main__":
-    grid = init()
-    # print the grid using matplotlib
-    plt.imshow(grid, cmap="gray")
-    plt.show()
-
-    print(evaluate(grid, True))

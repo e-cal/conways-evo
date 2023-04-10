@@ -4,6 +4,9 @@ from pprint import pprint
 import numpy as np
 
 
+###############################
+# Recombination Algorithms
+###############################
 def k_point_crossover(c1: np.ndarray, c2: np.ndarray, k=1) -> np.ndarray:
     # pre flight checks
     assert c1.shape == c2.shape
@@ -50,22 +53,3 @@ def k_point_crossover(c1: np.ndarray, c2: np.ndarray, k=1) -> np.ndarray:
     o2 = np.reshape(o2, og_shape)
 
     return o1, o2
-
-
-if __name__ == "__main__":
-    c1 = np.random.randint(low=0, high=2, size=(3, 3))
-    c2 = np.random.randint(low=0, high=2, size=(3, 3))
-
-    print("c1")
-    pprint(c1)
-    print("c2")
-    pprint(c2)
-
-    o1, o2 = Recombination.k_point_crossover(c1, c2, k=2)
-
-    print("-----------------------------")
-
-    print("o1")
-    pprint(o1)
-    print("o2")
-    pprint(o2)

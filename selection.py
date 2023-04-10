@@ -1,7 +1,7 @@
 import numpy as np
 
 ###############################
-# Parent Selection
+# Parent Selection Algorithms
 ###############################
 
 
@@ -12,7 +12,7 @@ def nbest(population, fitnesses, n):
 
 
 ###############################
-# Survivor Selection
+# Survivor Selection Algorithms
 ###############################
 
 
