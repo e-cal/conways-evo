@@ -4,7 +4,7 @@ from pprint import pprint
 import numpy as np
 
 
-def k_point_crossover(c1: np.ndarray, c2: np.ndarray, k=2) -> np.ndarray:
+def k_point_crossover(c1: np.ndarray, c2: np.ndarray, k=1) -> np.ndarray:
     # pre flight checks
     assert c1.shape == c2.shape
 

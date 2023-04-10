@@ -1,5 +1,20 @@
 import numpy as np
 
+###############################
+# Parent Selection
+###############################
+
+
+def nbest(population, fitnesses, n):
+    """Best n parent selection"""
+    idx = np.array(fitnesses).argsort()[::-1][:n]
+    return np.array(population)[idx].tolist(), np.array(fitnesses)[idx].tolist()
+
+
+###############################
+# Survivor Selection
+###############################
+
 
 def mu_plus_lambda(current_pop, current_fitness, offspring, offspring_fitness):
     """mu+lambda selection"""
