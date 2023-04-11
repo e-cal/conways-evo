@@ -5,10 +5,15 @@ import os
 import numpy as np
 from tqdm import tqdm, trange
 
-from evaluate import num_structures
-from mutation import bitflip
-from recombination import k_point_crossover
-from selection import mu_plus_lambda, nbest
+###############################################################################
+#                                   Setup
+###############################################################################
+# Import components of the genetic algorithm
+from evaluate import num_structures as evaluate
+from mutation import bitflip as mutate
+from recombination import k_point_crossover as recombine
+from selection import mu_plus_lambda as select_survivors
+from selection import nbest as select_parents
 
 # Game
 NCOLS = 60
@@ -16,44 +21,41 @@ NROWS = 60
 
 # Genetic Algorithm
 POP_SIZE = 64
-EVAL_WINDOW = (40, 54)
-MAX_GENS = 400
-N_STEPS = EVAL_WINDOW[1] + 1  # end when done evaluating (+1 for non-inclusive ranges)
-
 N_PARENTS = 8
 
+MAX_GENS = 400
+EVAL_WINDOW = (40, 54)
+# end when done evaluating (+1 for non-inclusive ranges)
+N_STEPS = EVAL_WINDOW[1] + 1
+
+# Logging
 DEFUALT_PATH = "history"
 
-# Set algorithms to use
-# fmt: off
-evaluate = num_structures
-select_survivors = mu_plus_lambda
-mutate = bitflip
-recombine = k_point_crossover
-def select_parents(population, fitnesses):
-    return nbest(population, fitnesses, N_PARENTS)
-# fmt: on
+###############################################################################
+#                                   Main Functions
+###############################################################################
 
 
-def log_and_save(population, fitnesses, gen, path):
-    if not os.path.exists(f"{path}/log.csv"):
-        with open(f"{path}/log.csv", "w") as f:
+def log_and_save(population, fitnesses, gen, fp):
+    if not os.path.exists(f"{fp}/log.csv"):
+        with open(f"{fp}/log.csv", "w") as f:
             f.write("generation,max,avg,min")
 
-    with open(f"{path}/log.csv", "a") as f:
+    with open(f"{fp}/log.csv", "a") as f:
         f.write(f"\n{gen},{max(fitnesses)},{np.mean(fitnesses)},{min(fitnesses)}")
 
     max_fitness = max(fitnesses)
     n = 1
     for individual, fitness in zip(population, fitnesses):
         if fitness == max_fitness:
-            np.save(f"{path}/gen{gen}_{n}.npy", individual)
+            np.save(f"{fp}/gen{gen}_{n}.npy", individual)
             n += 1
 
 
 def init():
     cells = np.random.randint(low=0, high=2, size=(POP_SIZE, NROWS, NCOLS))
-    return [cell for cell in cells]
+    # return [cell for cell in cells]
+    return list(cells)
 
 
 def update(cur):
@@ -105,7 +107,18 @@ def async_run(population, gen, progress_bar=None):
     return fitnesses
 
 
-def main(path):
+def generate_offspring(parent_idxs, population):
+    offspring = []
+    for i in range(N_PARENTS // 2):
+        # randomly pair parents, popping them from the pool
+        parent1 = population[parent_idxs.pop(np.random.randint(len(parent_idxs)))]
+        parent2 = population[parent_idxs.pop(np.random.randint(len(parent_idxs)))]
+
+        offspring.extend(recombine(parent1, parent2))
+    return offspring
+
+
+def ga(fp):
     print(f"Starting genetic algorithm with {POP_SIZE} random individuals\n")
     population = init()
 
@@ -138,20 +151,10 @@ def main(path):
                 leave=False,
             ) as progbar:
                 # select parents
-                parent_idxs = select_parents(population, fitnesses)
+                parent_idxs = select_parents(population, fitnesses, N_PARENTS)
 
                 # generate offspring
-                offspring = []
-                for i in range(N_PARENTS // 2):
-                    # randomly pair parents, popping them from the pool
-                    parent1 = population[
-                        parent_idxs.pop(np.random.randint(len(parent_idxs)))
-                    ]
-                    parent2 = population[
-                        parent_idxs.pop(np.random.randint(len(parent_idxs)))
-                    ]
-
-                    offspring.extend(recombine(parent1, parent2))
+                offspring = generate_offspring(parent_idxs, population)
 
                 # mutate offspring
                 offspring = list(map(mutate, offspring))
@@ -169,12 +172,12 @@ def main(path):
                     f"Generation {gen}/{MAX_GENS} (best={max(fitnesses)}, avg={np.mean(fitnesses):.2f})"
                 )
 
-                log_and_save(population, fitnesses, gen, path)
+                log_and_save(population, fitnesses, gen, fp)
 
     print(f"\nCompleted {MAX_GENS} generations.\nBest fitness: {max(fitnesses)}")
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--filepath", help="path to save logs and individuals")
     parser.add_argument(
@@ -205,4 +208,8 @@ if __name__ == "__main__":
         )
         exit()
 
-    main(path)
+    ga(path)
+
+
+if __name__ == "__main__":
+    main()
