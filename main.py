@@ -171,6 +171,8 @@ def main(path):
 
                 log_and_save(population, fitnesses, gen, path)
 
+    print(f"\nCompleted {MAX_GENS} generations.\nBest fitness: {max(fitnesses)}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
