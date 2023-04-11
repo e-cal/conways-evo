@@ -3,11 +3,11 @@ from enum import Enum
 
 import numpy as np
 
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-import pygame
-
-from evaluate import evaluate
+from evaluate import num_structures as evaluate
 from main import update
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+import pygame  # noqa
 
 NCOLS = 60
 NROWS = 60

@@ -3,7 +3,7 @@ import concurrent.futures as cf
 import os
 
 import numpy as np
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 from evaluate import num_structures
 from mutation import bitflip
@@ -15,13 +15,12 @@ NCOLS = 60
 NROWS = 60
 
 # Genetic Algorithm
-POP_SIZE = 64
+POP_SIZE = 8  # 64
 EVAL_WINDOW = (40, 54)
-MAX_GENS = 3  # 400
+MAX_GENS = 400
 N_STEPS = EVAL_WINDOW[1]  # end when done evaluating
 
 N_PARENTS = 8
-N_OFFSPRING = 8
 
 DEFUALT_PATH = "history"
 
@@ -38,7 +37,7 @@ def select_parents(population, fitnesses):
 
 def init():
     cells = np.random.randint(low=0, high=2, size=(POP_SIZE, NROWS, NCOLS))
-    return cells
+    return [cell for cell in cells]
 
 
 def update(cur):
@@ -71,45 +70,94 @@ def run(cells):
     return fitness
 
 
+# Modify async_run function to accept a tqdm object for updating the progress bar
+def async_run(population, gen, progress_bar=None):
+    fitnesses = [0] * len(population)
+
+    with cf.ProcessPoolExecutor() as executor:
+        futures = {
+            executor.submit(run, individual): i
+            for i, individual in enumerate(population)
+        }
+
+        for future in cf.as_completed(futures):
+            i = futures[future]
+            fitnesses[i] = future.result()
+
+            if progress_bar:  # Update the progress bar if it's passed
+                progress_bar.update(1)
+
+    return fitnesses
+
+
+# Modify main function to have a nested progress bar for generations and individuals
 def main(path):
     print(f"Starting genetic algorithm with {POP_SIZE} random individuals\n")
     population = init()
-    fitnesses = [0] * POP_SIZE
 
-    for gen in range(MAX_GENS):
-        with cf.ProcessPoolExecutor() as executor:
-            future_to_individual = {
-                executor.submit(run, individual): i
-                for i, individual in enumerate(population)
-            }
-            for future in tqdm(
-                cf.as_completed(future_to_individual),
-                total=len(population),
-                desc=f"Generation {gen}",
-            ):
-                i = future_to_individual[future]
-                fitnesses[i] = future.result()
+    bar_format = "{l_bar}{bar}| eta: {remaining}"
 
-        # select parents
-        print(f"Fitnesses: {fitnesses}")
-        parent_idxs = select_parents(population, fitnesses)
-        print(f"Parents: {parent_idxs}")
-        print(f"Parents fitnesses: {[fitnesses[i] for i in parent_idxs]}")
+    with tqdm(
+        total=len(population),
+        desc="Evaluating initial population",
+        bar_format=bar_format,
+        position=1,
+        leave=False,
+    ) as progbar:
+        fitnesses = async_run(population, 0, progbar)
 
-        # generate offspring
-        # offspring =
+    # Create a progress bar for the outer loop (generations)
+    with trange(
+        1,
+        MAX_GENS + 1,
+        desc=f"Generation 0/{MAX_GENS} (best: {max(fitnesses)}, avg: {np.mean(fitnesses):.2f})",
+        bar_format=bar_format,
+        position=0,
+        leave=False,
+    ) as gen_progress:
+        for gen in gen_progress:
+            # Create a progress bar for the inner loop (individuals)
+            with tqdm(
+                total=N_PARENTS,
+                desc="Generation progress",
+                bar_format=bar_format,
+                position=1,
+                leave=False,
+            ) as progbar:
+                # select parents
+                parent_idxs = select_parents(population, fitnesses)
 
-        # mutate offspring
+                # generate offspring
+                offspring = []
+                for i in range(N_PARENTS // 2):
+                    # randomly pair parents, popping them from the pool
+                    parent1 = population[
+                        parent_idxs.pop(np.random.randint(len(parent_idxs)))
+                    ]
+                    parent2 = population[
+                        parent_idxs.pop(np.random.randint(len(parent_idxs)))
+                    ]
 
-        # evaluate offspring
-        # offspring_fitnesses = [0] * len(offspring)
-        # for i, individual in enumerate(offspring):
-        #     offspring_fitnesses[i] = run(individual)
+                    offspring.extend(recombine(parent1, parent2))
 
-        # select survivors
+                # mutate offspring
+                offspring = list(map(mutate, offspring))
 
-        log(fitnesses, gen, path)
-        save_best(population, fitnesses, gen, path)
+                # evaluate offspring
+                offspring_fitnesses = async_run(offspring, gen, progbar)
+
+                # select survivors
+                population, fitnesses = select_survivors(
+                    population, fitnesses, offspring, offspring_fitnesses
+                )
+
+                # Update the logging output underneath the progress bar
+                gen_progress.set_description(
+                    f"Generation {gen}/{MAX_GENS} (best={max(fitnesses)}, avg={np.mean(fitnesses):.2f})"
+                )
+
+                # log(fitnesses, gen, path)
+                save_best(population, fitnesses, gen, path)
 
 
 def log(fitnesses, gen, path):
@@ -131,8 +179,6 @@ def save_best(population, fitnesses, gen, path):
         if fitness == max_fitness:
             np.save(f"{path}/gen{gen}_{n}.npy", individual)
             n += 1
-
-    print(f"Saved {n - 1} individual(s) to {path}\n")
 
 
 if __name__ == "__main__":
