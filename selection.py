@@ -7,8 +7,8 @@ import numpy as np
 
 def nbest(population, fitnesses, n):
     """Best n parent selection"""
-    idx = np.array(fitnesses).argsort()[::-1][:n]
-    return idx
+    idxs = np.array(fitnesses).argsort()[::-1][:n]
+    return list(idxs)
 
 
 ###############################
@@ -32,8 +32,8 @@ def mu_plus_lambda(current_pop, current_fitness, offspring, offspring_fitness):
     # add the top mu choices to the new population
     for i in range(mu):
         ix = idx[i]
-        population.append(pool[ix].tolist())
-        fitness.append(fp[ix].tolist())
+        population.append(pool[ix])
+        fitness.append(fp[ix])
 
     return population, fitness
 
