@@ -36,11 +36,11 @@ def select_parents(population, fitnesses):
 
 
 def log_and_save(population, fitnesses, gen, path):
-    if not os.path.exists(f"{path}/log.txt"):
-        with open(f"{path}/log.txt", "w") as f:
+    if not os.path.exists(f"{path}/log.csv"):
+        with open(f"{path}/log.csv", "w") as f:
             f.write("generation,max,avg,min")
 
-    with open(f"{path}/log.txt", "a") as f:
+    with open(f"{path}/log.csv", "a") as f:
         f.write(f"\n{gen},{max(fitnesses)},{np.mean(fitnesses)},{min(fitnesses)}")
 
     max_fitness = max(fitnesses)
