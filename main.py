@@ -1,7 +1,9 @@
 import argparse
+import concurrent.futures as cf
 import os
 
 import numpy as np
+from tqdm import tqdm
 
 from evaluate import num_structures
 from mutation import bitflip
@@ -75,13 +77,24 @@ def main(path):
     fitnesses = [0] * POP_SIZE
 
     for gen in range(MAX_GENS):
-        for i, individual in enumerate(population):
-            fitnesses[i] = run(individual)
+        with cf.ProcessPoolExecutor() as executor:
+            future_to_individual = {
+                executor.submit(run, individual): i
+                for i, individual in enumerate(population)
+            }
+            for future in tqdm(
+                cf.as_completed(future_to_individual),
+                total=len(population),
+                desc=f"Generation {gen}",
+            ):
+                i = future_to_individual[future]
+                fitnesses[i] = future.result()
 
         # select parents
         print(f"Fitnesses: {fitnesses}")
-        parents, parents_fitness = select_parents(population, fitnesses)
-        print(f"Parents: {parents_fitness}")
+        parent_idxs = select_parents(population, fitnesses)
+        print(f"Parents: {parent_idxs}")
+        print(f"Parents fitnesses: {[fitnesses[i] for i in parent_idxs]}")
 
         # generate offspring
         # offspring =
@@ -101,7 +114,7 @@ def main(path):
 
 def log(fitnesses, gen, path):
     print(
-        f"Generation {gen}\n  Best fitness: {max(fitnesses)}\n  Avg fitness: {np.mean(fitnesses):.2f}\n  Worst fitness: {min(fitnesses)}"
+        f"  Best fitness: {max(fitnesses)}\n  Avg fitness: {np.mean(fitnesses):.2f}\n  Worst fitness: {min(fitnesses)}"
     )
     if not os.path.exists(f"{path}/log.txt"):
         with open(f"{path}/log.txt", "w") as f:

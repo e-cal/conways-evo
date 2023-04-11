@@ -8,7 +8,7 @@ import numpy as np
 def nbest(population, fitnesses, n):
     """Best n parent selection"""
     idx = np.array(fitnesses).argsort()[::-1][:n]
-    return np.array(population)[idx].tolist(), np.array(fitnesses)[idx].tolist()
+    return idx
 
 
 ###############################
