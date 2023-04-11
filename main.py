@@ -15,10 +15,10 @@ NCOLS = 60
 NROWS = 60
 
 # Genetic Algorithm
-POP_SIZE = 8  # 64
+POP_SIZE = 64
 EVAL_WINDOW = (40, 54)
 MAX_GENS = 400
-N_STEPS = EVAL_WINDOW[1]  # end when done evaluating
+N_STEPS = EVAL_WINDOW[1] + 1  # end when done evaluating (+1 for non-inclusive ranges)
 
 N_PARENTS = 8
 
@@ -33,6 +33,22 @@ recombine = k_point_crossover
 def select_parents(population, fitnesses):
     return nbest(population, fitnesses, N_PARENTS)
 # fmt: on
+
+
+def log_and_save(population, fitnesses, gen, path):
+    if not os.path.exists(f"{path}/log.txt"):
+        with open(f"{path}/log.txt", "w") as f:
+            f.write("generation,max,avg,min")
+
+    with open(f"{path}/log.txt", "a") as f:
+        f.write(f"\n{gen},{max(fitnesses)},{np.mean(fitnesses)},{min(fitnesses)}")
+
+    max_fitness = max(fitnesses)
+    n = 1
+    for individual, fitness in zip(population, fitnesses):
+        if fitness == max_fitness:
+            np.save(f"{path}/gen{gen}_{n}.npy", individual)
+            n += 1
 
 
 def init():
@@ -63,14 +79,13 @@ def update(cur):
 def run(cells):
     fitness = 0
     for step in range(N_STEPS):
-        cells = update(cells)
         if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
             fitness += evaluate(cells)
+        cells = update(cells)
 
     return fitness
 
 
-# Modify async_run function to accept a tqdm object for updating the progress bar
 def async_run(population, gen, progress_bar=None):
     fitnesses = [0] * len(population)
 
@@ -84,13 +99,12 @@ def async_run(population, gen, progress_bar=None):
             i = futures[future]
             fitnesses[i] = future.result()
 
-            if progress_bar:  # Update the progress bar if it's passed
+            if progress_bar:
                 progress_bar.update(1)
 
     return fitnesses
 
 
-# Modify main function to have a nested progress bar for generations and individuals
 def main(path):
     print(f"Starting genetic algorithm with {POP_SIZE} random individuals\n")
     population = init()
@@ -116,7 +130,6 @@ def main(path):
         leave=False,
     ) as gen_progress:
         for gen in gen_progress:
-            # Create a progress bar for the inner loop (individuals)
             with tqdm(
                 total=N_PARENTS,
                 desc="Generation progress",
@@ -156,29 +169,7 @@ def main(path):
                     f"Generation {gen}/{MAX_GENS} (best={max(fitnesses)}, avg={np.mean(fitnesses):.2f})"
                 )
 
-                # log(fitnesses, gen, path)
-                save_best(population, fitnesses, gen, path)
-
-
-def log(fitnesses, gen, path):
-    print(
-        f"  Best fitness: {max(fitnesses)}\n  Avg fitness: {np.mean(fitnesses):.2f}\n  Worst fitness: {min(fitnesses)}"
-    )
-    if not os.path.exists(f"{path}/log.txt"):
-        with open(f"{path}/log.txt", "w") as f:
-            f.write("generation,max,avg,min")
-
-    with open(f"{path}/log.txt", "a") as f:
-        f.write(f"\n{gen},{max(fitnesses)},{np.mean(fitnesses)},{min(fitnesses)}")
-
-
-def save_best(population, fitnesses, gen, path):
-    max_fitness = max(fitnesses)
-    n = 1
-    for individual, fitness in zip(population, fitnesses):
-        if fitness == max_fitness:
-            np.save(f"{path}/gen{gen}_{n}.npy", individual)
-            n += 1
+                log_and_save(population, fitnesses, gen, path)
 
 
 if __name__ == "__main__":

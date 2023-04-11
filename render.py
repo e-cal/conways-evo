@@ -4,19 +4,14 @@ from enum import Enum
 import numpy as np
 
 from evaluate import num_structures as evaluate
-from main import update
+from main import EVAL_WINDOW, N_STEPS, NCOLS, NROWS, update
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame  # noqa
 
-NCOLS = 60
-NROWS = 60
 CELLSIZE = 16
 
-UPDATE_RATE_MS = 100
-
-EVAL_WINDOW = (40, 54)
-N_STEPS = EVAL_WINDOW[1]  # end when done evaluating
+UPDATE_RATE_MS = 10
 
 
 class Color(Enum):
@@ -101,7 +96,7 @@ def run(cells, debug=False, interactive=False):
 
                 cells = update(cells)
                 step += 1
-                if step > N_STEPS:
+                if step == N_STEPS:
                     return fitness
 
 
@@ -114,8 +109,8 @@ if __name__ == "__main__":
     parser.add_argument("--interactive", "-i", action="store_true")
     args = vars(parser.parse_args())
     fp = args["file"]
-    debug = args["debug"]
     interactive = args["interactive"]
+    debug = args["debug"] or interactive
 
     if not debug:
         print("Debug mode off, use -d to see debug output.")
