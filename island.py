@@ -92,7 +92,7 @@ def ga(fp):
         avg = [f"{np.mean(fitnesses[i]):.2f}" for i in range(N_SUB_POPULATIONS)]
         metrics.set_postfix(best=best, avg=avg)
 
-        log_and_save(population, fitnesses, gen, fp)
+        log_and_save(populations, fitnesses, gen, fp)
 
         if gen % MIGRATION_FREQUENCY == 0:
             metrics.set_postfix_str(f"best={best}, avg={avg}, migrating...")
@@ -125,7 +125,7 @@ def log_and_save(population, fitnesses, gen, fp):
     max_fitnesses = [max(f) for f in fitnesses]
     avg_fitnesses = [np.mean(f) for f in fitnesses]
     min_fitnesses = [min(f) for f in fitnesses]
-    with open(f"{fp}/log.csv", "a") as f:
+    with open(f"{fp}/log_all.csv", "a") as f:
         f.write(f"\n{gen}")
         for i in range(N_SUB_POPULATIONS):
             f.write(f",{max_fitnesses[i]},{avg_fitnesses[i]},{min_fitnesses[i]}")
@@ -151,9 +151,16 @@ def log_and_save(population, fitnesses, gen, fp):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--filepath", help="path to save logs and individuals")
     parser.add_argument(
-        "-d", "--delete", help="delete existing directory", action="store_true"
+        "-f",
+        "--filepath",
+        help="Path to save logs and individuals (disables input prompt)",
+    )
+    parser.add_argument(
+        "-d",
+        "--delete",
+        help="Delete the save directory if it already exists (instead of erroring out)",
+        action="store_true",
     )
     args = parser.parse_args()
 

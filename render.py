@@ -4,14 +4,15 @@ from enum import Enum
 import numpy as np
 
 from evaluate import num_structures as evaluate
-from main import EVAL_WINDOW, N_STEPS, NCOLS, NROWS, update
+from main import EVAL_WINDOW, NCOLS, NROWS, update
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame  # noqa
 
 CELLSIZE = 16
 
-UPDATE_RATE_MS = 10
+N_STEPS = 1000
+UPDATE_RATE_MS = 200
 
 
 class Color(Enum):
@@ -87,12 +88,12 @@ def run(cells, debug=False, interactive=False):
             if event.type == GAME_TICK:
                 draw_cells(cells, surface)
 
-                if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
-                    # fmt: off
-                    if debug: print(f"Evaluating step {step}")
-                    fitness += evaluate(cells, debug=debug)
-                    if interactive: input()
-                    # fmt: on
+                # if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
+                # fmt: off
+                if debug: print(f"Evaluating step {step}")
+                fitness += evaluate(cells, debug=debug)
+                if interactive: input()
+                # fmt: on
 
                 cells = update(cells)
                 step += 1
@@ -104,9 +105,23 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", "-f")
-    parser.add_argument("--debug", "-d", action="store_true")
-    parser.add_argument("--interactive", "-i", action="store_true")
+    parser.add_argument(
+        "--file",
+        "-f",
+        help="Path to the individual to load. Omitting will run the individual specified in this file (init_pattern).",
+    )
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Print debug (evaluation) output",
+    )
+    parser.add_argument(
+        "--interactive",
+        "-i",
+        action="store_true",
+        help="Interactive mode. Step through evaluation steps.",
+    )
     args = vars(parser.parse_args())
     fp = args["file"]
     interactive = args["interactive"]

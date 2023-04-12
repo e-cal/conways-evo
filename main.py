@@ -171,9 +171,16 @@ def log_and_save(population, fitnesses, gen, fp):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--filepath", help="path to save logs and individuals")
     parser.add_argument(
-        "-d", "--delete", help="delete existing directory", action="store_true"
+        "-f",
+        "--filepath",
+        help="Path to save logs and individuals (disables input prompt)",
+    )
+    parser.add_argument(
+        "-d",
+        "--delete",
+        help="Delete the save directory if it already exists (instead of erroring out)",
+        action="store_true",
     )
     args = parser.parse_args()
 
