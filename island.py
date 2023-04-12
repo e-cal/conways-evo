@@ -1,6 +1,6 @@
-from main import (DEFUALT_PATH, NCOLS, NROWS, argparse, async_run,
-                  log_and_save, mutate, np, os, recombine, select_parents,
-                  select_survivors, tqdm, trange)
+from main import (DEFUALT_PATH, NCOLS, NROWS, argparse, async_run, mutate, np,
+                  os, recombine, select_parents, select_survivors, tqdm,
+                  trange)
 
 POP_SIZE = 64
 MAX_GENS = 400
@@ -113,6 +113,40 @@ def ga(fp):
 
     best = [max(fitnesses[i]) for i in range(N_SUB_POPULATIONS)]
     print(f"\nCompleted {MAX_GENS} generations.\nBest fitnesses: {best}")
+
+
+def log_and_save(population, fitnesses, gen, fp):
+    if not os.path.exists(f"{fp}/log_all.csv"):
+        with open(f"{fp}/log_all.csv", "w") as f:
+            f.write("generation")
+            for i in range(N_SUB_POPULATIONS):
+                f.write(f",max{i},avg{i},min{i}")
+
+    max_fitnesses = [max(f) for f in fitnesses]
+    avg_fitnesses = [np.mean(f) for f in fitnesses]
+    min_fitnesses = [min(f) for f in fitnesses]
+    with open(f"{fp}/log.csv", "a") as f:
+        f.write(f"\n{gen}")
+        for i in range(N_SUB_POPULATIONS):
+            f.write(f",{max_fitnesses[i]},{avg_fitnesses[i]},{min_fitnesses[i]}")
+
+    # flatten fitnesses and population
+    fitnesses = [f for sub in fitnesses for f in sub]
+    population = [p for sub in population for p in sub]
+
+    if not os.path.exists(f"{fp}/log.csv"):
+        with open(f"{fp}/log.csv", "w") as f:
+            f.write("generation,max,avg,min")
+
+    with open(f"{fp}/log.csv", "a") as f:
+        f.write(f"\n{gen},{max(fitnesses)},{np.mean(fitnesses)},{min(fitnesses)}")
+
+    max_fitness = max(fitnesses)
+    n = 1
+    for individual, fitness in zip(population, fitnesses):
+        if fitness == max_fitness:
+            np.save(f"{fp}/gen{gen}_{n}.npy", individual)
+            n += 1
 
 
 def main():
