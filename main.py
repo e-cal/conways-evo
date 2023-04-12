@@ -36,25 +36,8 @@ DEFUALT_PATH = "history"
 ###############################################################################
 
 
-def log_and_save(population, fitnesses, gen, fp):
-    if not os.path.exists(f"{fp}/log.csv"):
-        with open(f"{fp}/log.csv", "w") as f:
-            f.write("generation,max,avg,min")
-
-    with open(f"{fp}/log.csv", "a") as f:
-        f.write(f"\n{gen},{max(fitnesses)},{np.mean(fitnesses)},{min(fitnesses)}")
-
-    max_fitness = max(fitnesses)
-    n = 1
-    for individual, fitness in zip(population, fitnesses):
-        if fitness == max_fitness:
-            np.save(f"{fp}/gen{gen}_{n}.npy", individual)
-            n += 1
-
-
 def init():
     cells = np.random.randint(low=0, high=2, size=(POP_SIZE, NROWS, NCOLS))
-    # return [cell for cell in cells]
     return list(cells)
 
 
@@ -88,7 +71,7 @@ def run(cells):
     return fitness
 
 
-def async_run(population, gen, progress_bar=None):
+def async_run(population, progress_bar=None):
     fitnesses = [0] * len(population)
 
     with cf.ProcessPoolExecutor() as executor:
@@ -109,7 +92,7 @@ def async_run(population, gen, progress_bar=None):
 
 def generate_offspring(parent_idxs, population):
     offspring = []
-    for i in range(N_PARENTS // 2):
+    for _ in range(N_PARENTS // 2):
         # randomly pair parents, popping them from the pool
         parent1 = population[parent_idxs.pop(np.random.randint(len(parent_idxs)))]
         parent2 = population[parent_idxs.pop(np.random.randint(len(parent_idxs)))]
@@ -131,7 +114,7 @@ def ga(fp):
         position=1,
         leave=False,
     ) as progbar:
-        fitnesses = async_run(population, 0, progbar)
+        fitnesses = async_run(population, progbar)
 
     # Create a progress bar for the outer loop (generations)
     with trange(
@@ -143,38 +126,47 @@ def ga(fp):
         leave=False,
     ) as gen_progress:
         for gen in gen_progress:
-            with tqdm(
-                total=N_PARENTS,
-                desc="Generation progress",
-                bar_format=bar_format,
-                position=1,
-                leave=False,
-            ) as progbar:
-                # select parents
-                parent_idxs = select_parents(population, fitnesses, N_PARENTS)
+            # select parents
+            parent_idxs = select_parents(population, fitnesses, N_PARENTS)
 
-                # generate offspring
-                offspring = generate_offspring(parent_idxs, population)
+            # generate offspring
+            offspring = generate_offspring(parent_idxs, population)
 
-                # mutate offspring
-                offspring = list(map(mutate, offspring))
+            # mutate offspring
+            offspring = list(map(mutate, offspring))
 
-                # evaluate offspring
-                offspring_fitnesses = async_run(offspring, gen, progbar)
+            # evaluate offspring
+            offspring_fitnesses = async_run(offspring)
 
-                # select survivors
-                population, fitnesses = select_survivors(
-                    population, fitnesses, offspring, offspring_fitnesses
-                )
+            # select survivors
+            population, fitnesses = select_survivors(
+                population, fitnesses, offspring, offspring_fitnesses
+            )
 
-                # Update the logging output underneath the progress bar
-                gen_progress.set_description(
-                    f"Generation {gen}/{MAX_GENS} (best={max(fitnesses)}, avg={np.mean(fitnesses):.2f})"
-                )
+            # Update the logging output underneath the progress bar
+            gen_progress.set_description(
+                f"Generation {gen}/{MAX_GENS} (best={max(fitnesses)}, avg={np.mean(fitnesses):.2f})"
+            )
 
-                log_and_save(population, fitnesses, gen, fp)
+            log_and_save(population, fitnesses, gen, fp)
 
     print(f"\nCompleted {MAX_GENS} generations.\nBest fitness: {max(fitnesses)}")
+
+
+def log_and_save(population, fitnesses, gen, fp):
+    if not os.path.exists(f"{fp}/log.csv"):
+        with open(f"{fp}/log.csv", "w") as f:
+            f.write("generation,max,avg,min")
+
+    with open(f"{fp}/log.csv", "a") as f:
+        f.write(f"\n{gen},{max(fitnesses)},{np.mean(fitnesses)},{min(fitnesses)}")
+
+    max_fitness = max(fitnesses)
+    n = 1
+    for individual, fitness in zip(population, fitnesses):
+        if fitness == max_fitness:
+            np.save(f"{fp}/gen{gen}_{n}.npy", individual)
+            n += 1
 
 
 def main():
