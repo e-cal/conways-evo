@@ -12,8 +12,8 @@ from tqdm import tqdm, trange
 from evaluate import num_structures as evaluate
 from mutation import bitflip as mutate
 from recombination import k_point_crossover as recombine
-from selection import mu_plus_lambda as select_survivors
 from selection import nbest as select_parents
+from selection import replacement as select_survivors
 
 # Game
 NCOLS = 60
@@ -96,6 +96,11 @@ def generate_offspring(parent_idxs, population):
         # randomly pair parents, popping them from the pool
         parent1 = population[parent_idxs.pop(np.random.randint(len(parent_idxs)))]
         parent2 = population[parent_idxs.pop(np.random.randint(len(parent_idxs)))]
+
+        if type(parent1) is not np.ndarray:
+            parent1 = np.array(parent1)
+        if type(parent2) is not np.ndarray:
+            parent2 = np.array(parent2)
 
         offspring.extend(recombine(parent1, parent2))
     return offspring
