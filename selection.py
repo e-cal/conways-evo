@@ -91,8 +91,8 @@ def crowding_replacement(current_pop, current_fitness, offspring, offspring_fitn
 
     mu = len(current_pop)
     labmda = len(offspring)
-    # choose a random subset of the current population (len lambda)
-    idx = np.random.choice(mu, size=labmda, replace=False)
+    # choose a random subset of the current population
+    idx = np.random.choice(mu, size=labmda * 2, replace=False)
 
     # to_replace is the individuals from the current population that will be replaced (idxs)
     to_replace = np.array(current_pop)[idx]
@@ -103,11 +103,6 @@ def crowding_replacement(current_pop, current_fitness, offspring, offspring_fitn
         [_distance(child, individual) for individual in to_replace]
         for child in offspring
     ]
-
-    # for each offspring
-    # find the index of the individual in the current population that is most similar
-    # and replace it with the offspring
-    # ensure that multiple offspring don't replace the same individual
 
     # map individual index to offspring that will replace it
     replacements = {}
@@ -122,10 +117,10 @@ def crowding_replacement(current_pop, current_fitness, offspring, offspring_fitn
             ix = np.argmin(distances[i])
             taken = ix in replacements
 
-        replacements[ix] = child
+        replacements[ix] = i, child
 
-    for i, child in replacements.items():
+    for i, (ci, child) in replacements.items():
         current_pop[i] = child
-        current_fitness[i] = offspring_fitness[i]
+        current_fitness[i] = offspring_fitness[ci]
 
     return current_pop, current_fitness
