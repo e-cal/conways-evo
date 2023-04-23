@@ -11,6 +11,28 @@ def nbest(population, fitnesses, n):
     return list(idxs)
 
 
+def tournament(fitness, mating_pool_size, tournament_size):
+    """Tournament selection without replacement"""
+
+    selected_to_mate = []
+
+    # initialize population to select (and remove) from
+    pool = list(range(len(fitness)))
+    # repeat until mating pool has enough individuals
+    while len(selected_to_mate) < mating_pool_size:
+        best = None  # init best in the tournament
+        for _ in range(tournament_size):  # compare n=tournament_size individuals
+            contender = np.random.choice(pool)  # choose a random contender
+            # check if the contender is better than the previous best
+            if best is None or fitness[contender] > fitness[best]:
+                best = contender
+        idx = pool.index(best)  # type: ignore
+        # add the tournament winner to the selected parents and remove from the pool
+        selected_to_mate.append(pool.pop(idx))
+
+    return selected_to_mate
+
+
 ###############################
 # Survivor Selection Algorithms
 ###############################
