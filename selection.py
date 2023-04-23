@@ -80,3 +80,52 @@ def replacement(current_pop, current_fitness, offspring, offspring_fitness):
     fitness += offspring_fitness
 
     return population, fitness
+
+
+def crowding_replacement(current_pop, current_fitness, offspring, offspring_fitness):
+    """Offspring replaces the most similar from a random subset of the current population"""
+
+    def _distance(child, individual):
+        """Euclidean distance between two individuals"""
+        return np.linalg.norm(np.array(child) - np.array(individual))
+
+    mu = len(current_pop)
+    labmda = len(offspring)
+    # choose a random subset of the current population (len lambda)
+    idx = np.random.choice(mu, size=labmda, replace=False)
+
+    # to_replace is the individuals from the current population that will be replaced (idxs)
+    to_replace = np.array(current_pop)[idx]
+
+    # for each offspring
+    # generate a list of distances to each individual in the current population
+    distances = [
+        [_distance(child, individual) for individual in to_replace]
+        for child in offspring
+    ]
+
+    # for each offspring
+    # find the index of the individual in the current population that is most similar
+    # and replace it with the offspring
+    # ensure that multiple offspring don't replace the same individual
+
+    # map individual index to offspring that will replace it
+    replacements = {}
+    for i, child in enumerate(offspring):
+        # find the index of the most similar individual
+        ix = np.argmin(distances[i])
+
+        taken = ix in replacements
+        while taken:
+            # if the index is already taken, find the next best
+            distances[i][ix] = np.inf  # type: ignore
+            ix = np.argmin(distances[i])
+            taken = ix in replacements
+
+        replacements[ix] = child
+
+    for i, child in replacements.items():
+        current_pop[i] = child
+        current_fitness[i] = offspring_fitness[i]
+
+    return current_pop, current_fitness
