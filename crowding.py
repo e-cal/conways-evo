@@ -86,12 +86,16 @@ def log_and_save(population, fitnesses, gen, fp):
     with open(f"{fp}/log.csv", "a") as f:
         f.write(f"\n{gen},{max(fitnesses)},{np.mean(fitnesses)},{min(fitnesses)}")
 
+    idxs = np.random.choice(len(population), 3, replace=False)
+
     max_fitness = max(fitnesses)
     n = 1
-    for individual, fitness in zip(population, fitnesses):
+    for i, (individual, fitness) in enumerate(zip(population, fitnesses)):
         if fitness == max_fitness:
-            np.save(f"{fp}/gen{gen}_{n}.npy", individual)
+            np.save(f"{fp}/gen{gen}_best{n}.npy", individual)
             n += 1
+        elif i in idxs:
+            np.save(f"{fp}/gen{gen}_rand{i}.npy", individual)
 
 
 def main():
