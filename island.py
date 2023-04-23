@@ -1,6 +1,5 @@
-from main import (DEFUALT_PATH, NCOLS, NROWS, argparse, async_run, mutate, np,
-                  os, recombine, select_parents, select_survivors, tqdm,
-                  trange)
+from main import (DEFUALT_PATH, argparse, async_run, init, mutate, np, os,
+                  recombine, select_parents, select_survivors, tqdm, trange)
 
 POP_SIZE = 64
 MAX_GENS = 400
@@ -10,11 +9,6 @@ MIGRATION_RATE = 0.2  # proportion of individuals to migrate
 
 SUB_POP_SIZE = POP_SIZE // N_SUB_POPULATIONS
 N_PARENTS = round(0.125 * SUB_POP_SIZE)  # same ratio as 8:64
-
-
-def init():
-    cells = np.random.randint(low=0, high=2, size=(POP_SIZE, NROWS, NCOLS))
-    return list(cells)
 
 
 def generate_offspring(parent_idxs, population):

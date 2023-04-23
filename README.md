@@ -20,15 +20,13 @@ options:
 
 `python island.py`
 
-```
-usage: island.py [-h] [-f FILEPATH] [-d]
+> usage is the same as `main.py`
 
-options:
-  -h, --help            show this help message and exit
-  -f FILEPATH, --filepath FILEPATH
-                        Path to save logs and individuals (disables input prompt)
-  -d, --delete          Delete the save directory if it already exists (instead of erroring out)
-```
+#### Crowding model:
+
+`python crowding.py`
+
+> usage is the same as `main.py`
 
 ## Render and evaluate an individual
 
