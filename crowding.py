@@ -8,7 +8,8 @@ MAX_GENS = 400
 EVAL_WINDOW = (40, 54)
 N_STEPS = EVAL_WINDOW[1] + 1
 
-N_PARENTS = int(0.2 * POP_SIZE)  # ~20% of the population
+# N_PARENTS = int(0.2 * POP_SIZE)  # ~20% of the population
+N_PARENTS = 8
 
 ###############################################################################
 #                                   Main Functions

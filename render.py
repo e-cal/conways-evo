@@ -70,7 +70,7 @@ def init_pattern():
     return cells
 
 
-def run(cells, debug=False, interactive=False):
+def run(cells, debug=False, interactive=False, step=False):
     pygame.init()
     GAME_TICK = pygame.USEREVENT + 1
     pygame.time.set_timer(GAME_TICK, millis=UPDATE_RATE_MS)
@@ -88,11 +88,13 @@ def run(cells, debug=False, interactive=False):
             if event.type == GAME_TICK:
                 draw_cells(cells, surface)
 
-                # if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
                 # fmt: off
-                if debug: print(f"Evaluating step {step}")
-                fitness += evaluate(cells, debug=debug)
-                if interactive: input()
+                if step: input()
+
+                if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
+                    if debug: print(f"Evaluating step {step}")
+                    fitness += evaluate(cells, debug=debug)
+                    if interactive: input()
                 # fmt: on
 
                 cells = update(cells)
@@ -122,10 +124,17 @@ if __name__ == "__main__":
         action="store_true",
         help="Interactive mode. Step through evaluation steps.",
     )
+    parser.add_argument(
+        "--step",
+        "-s",
+        action="store_true",
+        help="Step through every step.",
+    )
     args = vars(parser.parse_args())
     fp = args["file"]
     interactive = args["interactive"]
     debug = args["debug"] or interactive
+    step = args["step"]
 
     if not debug:
         print("Debug mode off, use -d to see debug output.")
@@ -139,5 +148,5 @@ if __name__ == "__main__":
         print(f"Loading {fp}")
         cells = load(fp)
 
-    fitness = run(cells, debug, interactive)
+    fitness = run(cells, debug, interactive, step)
     print(f"Fitness: {fitness}")

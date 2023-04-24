@@ -2,6 +2,8 @@
 
 ## Running the Algorithms
 
+> You can also tweak the running parameters and components of the EA by changing the constants and imports at the top of the files.
+
 #### Baseline:
 
 `python main.py`
