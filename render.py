@@ -12,7 +12,7 @@ import pygame  # noqa
 CELLSIZE = 16
 
 N_STEPS = 1000
-UPDATE_RATE_MS = 200
+UPDATE_RATE_MS = 1
 
 
 class Color(Enum):
@@ -70,7 +70,7 @@ def init_pattern():
     return cells
 
 
-def run(cells, debug=False, interactive=False, step=False):
+def run(cells, debug=False, interactive=False, step_through=False, compare=False):
     pygame.init()
     GAME_TICK = pygame.USEREVENT + 1
     pygame.time.set_timer(GAME_TICK, millis=UPDATE_RATE_MS)
@@ -89,7 +89,9 @@ def run(cells, debug=False, interactive=False, step=False):
                 draw_cells(cells, surface)
 
                 # fmt: off
-                if step: input()
+                if step_through or (compare and step % 50 == 0): 
+                    print(f"Step {step}")
+                    input()
 
                 if EVAL_WINDOW[0] <= step <= EVAL_WINDOW[1]:
                     if debug: print(f"Evaluating step {step}")
@@ -130,11 +132,18 @@ if __name__ == "__main__":
         action="store_true",
         help="Step through every step.",
     )
+    parser.add_argument(
+        "--compare",
+        "-c",
+        action="store_true",
+        help="Stop at steps to compare.",
+    )
     args = vars(parser.parse_args())
     fp = args["file"]
     interactive = args["interactive"]
     debug = args["debug"] or interactive
     step = args["step"]
+    compare = args["compare"]
 
     if not debug:
         print("Debug mode off, use -d to see debug output.")
@@ -148,5 +157,5 @@ if __name__ == "__main__":
         print(f"Loading {fp}")
         cells = load(fp)
 
-    fitness = run(cells, debug, interactive, step)
+    fitness = run(cells, debug, interactive, step, compare)
     print(f"Fitness: {fitness}")
