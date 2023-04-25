@@ -5,13 +5,13 @@ import numpy as np
 ###############################
 
 
-def nbest(population, fitnesses, n):
+def nbest(fitnesses, n):
     """Best n parent selection"""
     idxs = np.array(fitnesses).argsort()[::-1][:n]
     return list(idxs)
 
 
-def tournament(fitness, mating_pool_size, tournament_size):
+def tournament(fitness, mating_pool_size, tournament_size=4):
     """Tournament selection without replacement"""
 
     selected_to_mate = []
@@ -29,6 +29,30 @@ def tournament(fitness, mating_pool_size, tournament_size):
         idx = pool.index(best)  # type: ignore
         # add the tournament winner to the selected parents and remove from the pool
         selected_to_mate.append(pool.pop(idx))
+
+    return selected_to_mate
+
+
+def MPS(fitness, mating_pool_size):
+    """Multi-pointer selection (MPS)"""
+
+    selected_to_mate = []
+
+    n = len(fitness)
+    # cumulative probability distribution
+    cprob = [sum(fitness[: i + 1]) / sum(fitness) for i in range(n)]
+
+    # pick a random value r uniformely from [0, 1/mating_pool_size]
+    r = np.random.uniform(0, 1 / mating_pool_size)
+
+    i = 0
+    # repeat until mating pool has enough individuals
+    while len(selected_to_mate) < mating_pool_size:
+        # select individual i if r <= cumulative probabiliy at i
+        while r <= cprob[i]:
+            selected_to_mate.append(i)
+            r += 1 / mating_pool_size  # increase r proportional to mating_pool_size
+        i += 1  # move to next individual
 
     return selected_to_mate
 

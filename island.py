@@ -61,7 +61,7 @@ def ga(fp):
     for gen in gen_progress:
         for i, population in enumerate(populations):
             # select parents
-            parent_idxs = select_parents(population, fitnesses[i], N_PARENTS)
+            parent_idxs = select_parents(fitnesses[i], N_PARENTS)
 
             # generate offspring
             offspring = generate_offspring(parent_idxs, population)

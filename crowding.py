@@ -53,7 +53,7 @@ def ga(fp):
     ) as gen_progress:
         for gen in gen_progress:
             # select parents
-            parent_idxs = select_parents(population, fitnesses, N_PARENTS)
+            parent_idxs = select_parents(fitnesses, N_PARENTS)
 
             # generate offspring
             offspring = generate_offspring(parent_idxs, population)
